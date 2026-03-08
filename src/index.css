@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #000000;
+}
+
+.grid-background {
+  position: relative;
+  background-color: #000000;
+}
+
+.grid-background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-size: 80px 80px;
+  background-image:
+    linear-gradient(to right, #2c2c2c 2px, transparent 2px),
+    linear-gradient(to bottom, #2c2c2c 2px, transparent 2px);
+  -webkit-mask-image: radial-gradient(
+    ellipse 23.96% 56.09% at 70.63% 44.88%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 23.96% 56.09% at 70.63% 44.88%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.grid-background-soft::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-size: 80px 80px;
+  background-image:
+    linear-gradient(to right, #1a1a1a 1px, transparent 1px),
+    linear-gradient(to bottom, #1a1a1a 1px, transparent 1px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.grid-background > *,
+.grid-background-soft > * {
+  position: relative;
+  z-index: 10;
+}

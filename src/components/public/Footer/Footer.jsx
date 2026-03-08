@@ -29,7 +29,6 @@ const Footer = () => {
   return (
     <footer className="bg-black px-4 py-12 font-open-sans text-white">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center space-y-6 text-center">
-
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -82,7 +81,10 @@ const Footer = () => {
             variants={itemVariants}
           >
             <MapPin size={18} className="shrink-0 text-gray-400" />
-            <span>{settings?.officeAddress || '123 Print Avenue, Suite 456, Creative City, ZIP 78910'}</span>
+            <span>
+              {settings?.officeAddress ||
+                '123 Print Avenue, Suite 456, Creative City, ZIP 78910'}
+            </span>
           </motion.div>
           <motion.div
             className="flex items-center space-x-2"
@@ -104,14 +106,18 @@ const Footer = () => {
             className="hidden flex-1 text-left md:block"
             variants={itemVariants}
           >
-            {settings?.footerText || `Copyright © ${currentYear} . All Rights Reserved`}
+            {settings?.footerText ||
+              `Copyright © ${currentYear} . All Rights Reserved`}
           </motion.div>
           <motion.div className="md:hidden" variants={itemVariants}>
-            {settings?.footerText || `Copyright © ${currentYear} . All Rights Reserved`}
+            {settings?.footerText ||
+              `Copyright © ${currentYear} . All Rights Reserved`}
           </motion.div>
 
           <motion.div
             className="flex items-center space-x-5 text-gray-400"
+            initial="visible"
+            animate="visible"
             variants={staggerContainerVariants}
           >
             {socialMedia.length ? (
@@ -121,16 +127,19 @@ const Footer = () => {
                   href={item.link}
                   target="_blank"
                   rel="noreferrer"
-                  className="block"
+                  className="block text-gray-400"
+                  aria-label={item.name || 'Social link'}
                   variants={itemVariants}
-                  whileHover={{ scale: 1.2, opacity: 0.8 }}
+                  whileHover={{ scale: 1.2, opacity: 0.9 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <img
                     src={item.icon}
-                    alt="Social media"
-                    className="h-6 w-6 rounded object-cover"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    alt={item.name || 'Social media'}
+                    className="h-6 w-6 rounded object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 </motion.a>
               ))
@@ -138,17 +147,27 @@ const Footer = () => {
               <>
                 <motion.a
                   href="#"
+                  className="text-gray-400"
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: 1 }}
                   variants={itemVariants}
                   whileHover={{ scale: 1.2, color: '#8ED800' }}
                   whileTap={{ scale: 0.95 }}
+                  aria-label="Instagram"
+                  style={{ color: '#a3a3a3' }}
                 >
                   <Instagram size={20} strokeWidth={1.5} />
                 </motion.a>
                 <motion.a
                   href="#"
+                  className="text-gray-400"
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: 1 }}
                   variants={itemVariants}
                   whileHover={{ scale: 1.2, color: '#8ED800' }}
                   whileTap={{ scale: 0.95 }}
+                  aria-label="Social"
+                  style={{ color: '#a3a3a3' }}
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -160,9 +179,14 @@ const Footer = () => {
                 </motion.a>
                 <motion.a
                   href="#"
+                  className="text-gray-400"
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: 1 }}
                   variants={itemVariants}
                   whileHover={{ scale: 1.2, color: '#8ED800' }}
                   whileTap={{ scale: 0.95 }}
+                  aria-label="Facebook"
+                  style={{ color: '#a3a3a3' }}
                 >
                   <Facebook size={20} strokeWidth={1.5} />
                 </motion.a>
@@ -179,7 +203,10 @@ const Footer = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Link to="/privacy-policy" className="transition-colors hover:text-white">
+              <Link
+                to="/privacy-policy"
+                className="transition-colors hover:text-white"
+              >
                 Privacy Policy
               </Link>
             </motion.div>

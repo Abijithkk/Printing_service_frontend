@@ -67,6 +67,7 @@ const API_ENDPOINTS = {
     UPDATE_LOGO: '/admin/site-settings/logo',
     UPDATE_CONTACT: '/admin/site-settings/contact',
     UPDATE_FOOTER: '/admin/site-settings/footer',
+    UPDATE_HEADER_CTA: '/admin/site-settings/header-cta',
     ADD_SOCIAL_MEDIA: '/admin/site-settings/social-media',
     UPDATE_SOCIAL_MEDIA: '/admin/site-settings/social-media/:id',
     DELETE_SOCIAL_MEDIA: '/admin/site-settings/social-media/:id',

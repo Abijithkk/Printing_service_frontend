@@ -4,6 +4,7 @@ import {
   updateLogo,
   updateContact,
   updateFooter,
+  updateHeaderCta,
   addSocialMedia,
   updateSocialMedia,
   deleteSocialMedia,
@@ -30,6 +31,10 @@ const useSettings = () => {
     return dispatch(updateFooter(footerData));
   };
 
+  const updateHeaderCtaAction = (ctaData) => {
+    return dispatch(updateHeaderCta(ctaData));
+  };
+
   const addSocialMediaAction = (formData) => {
     return dispatch(addSocialMedia(formData));
   };
@@ -54,6 +59,7 @@ const useSettings = () => {
     updateLogoAction,
     updateContactAction,
     updateFooterAction,
+    updateHeaderCtaAction,
     addSocialMediaAction,
     updateSocialMediaAction,
     deleteSocialMediaAction,

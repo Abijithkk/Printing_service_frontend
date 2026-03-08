@@ -100,6 +100,30 @@ export const updateFooter = createAsyncThunk(
   },
 );
 
+export const updateHeaderCta = createAsyncThunk(
+  'settings/updateHeaderCta',
+  async (ctaData, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(
+        API_ENDPOINTS.SETTINGS.UPDATE_HEADER_CTA,
+        ctaData,
+      );
+      if (response.data.success) {
+        return response.data.data;
+      }
+      return rejectWithValue(
+        response.data.message || 'Failed to update header CTA',
+      );
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to update header CTA';
+      return rejectWithValue(errorMessage);
+    }
+  },
+);
+
 export const addSocialMedia = createAsyncThunk(
   'settings/addSocialMedia',
   async (formData, { rejectWithValue }) => {
@@ -232,6 +256,19 @@ const settingsSlice = createSlice({
         state.error = null;
       })
       .addCase(updateFooter.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateHeaderCta.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateHeaderCta.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.data = action.payload;
+        state.error = null;
+      })
+      .addCase(updateHeaderCta.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })

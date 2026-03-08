@@ -8,7 +8,8 @@ import {
   PlusIcon,
   TrashIcon,
   GlobeAltIcon,
-  DocumentArrowUpIcon,
+  LinkIcon,
+  PencilIcon,
 } from '@heroicons/react/24/outline';
 import useSettings from '../../hooks/useSettings';
 
@@ -16,11 +17,11 @@ const SiteSettingsPage = () => {
   const {
     data,
     isLoading,
-    error,
     fetchSettings,
     updateLogoAction,
     updateContactAction,
     updateFooterAction,
+    updateHeaderCtaAction,
     addSocialMediaAction,
     updateSocialMediaAction,
     deleteSocialMediaAction,
@@ -31,15 +32,15 @@ const SiteSettingsPage = () => {
     phoneNumber: '',
     officeAddress: '',
     footerText: '',
+    headerCtaText: '',
+    headerCtaLink: '',
   });
 
   const [logo, setLogo] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
   const [socialLinks, setSocialLinks] = useState([]);
-  const [newSocialMedia, setNewSocialMedia] = useState({
-    link: '',
-    icon: null,
-  });
+  const [newSocialMedia, setNewSocialMedia] = useState({ link: '', icon: null });
+  const [editingSocialMedia, setEditingSocialMedia] = useState(null);
 
   useEffect(() => {
     fetchSettings();
@@ -52,6 +53,8 @@ const SiteSettingsPage = () => {
         phoneNumber: data.phoneNumber || '',
         officeAddress: data.officeAddress || '',
         footerText: data.footerText || '',
+        headerCtaText: data.header?.ctaButton?.text || '',
+        headerCtaLink: data.header?.ctaButton?.link || '',
       });
       setSocialLinks(data.socialMedia || []);
       if (data.logo) {
@@ -69,8 +72,7 @@ const SiteSettingsPage = () => {
     const file = e.target.files?.[0];
     if (file) {
       setLogo(file);
-      const preview = URL.createObjectURL(file);
-      setLogoPreview(preview);
+      setLogoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -86,10 +88,8 @@ const SiteSettingsPage = () => {
       toast.error('Please select a logo file');
       return;
     }
-
     const formDataObj = new FormData();
     formDataObj.append('logo', logo);
-
     const result = await updateLogoAction(formDataObj);
     if (result.type === 'settings/updateLogo/fulfilled') {
       toast.success('Logo updated successfully');
@@ -100,21 +100,15 @@ const SiteSettingsPage = () => {
   };
 
   const handleUpdateContact = async () => {
-    if (
-      !formData.contactEmail ||
-      !formData.phoneNumber ||
-      !formData.officeAddress
-    ) {
+    if (!formData.contactEmail || !formData.phoneNumber || !formData.officeAddress) {
       toast.error('Please fill in all contact fields');
       return;
     }
-
     const result = await updateContactAction({
       contactEmail: formData.contactEmail,
       phoneNumber: formData.phoneNumber,
       officeAddress: formData.officeAddress,
     });
-
     if (result.type === 'settings/updateContact/fulfilled') {
       toast.success('Contact details updated successfully');
     } else if (result.type === 'settings/updateContact/rejected') {
@@ -127,15 +121,27 @@ const SiteSettingsPage = () => {
       toast.error('Please enter footer text');
       return;
     }
-
-    const result = await updateFooterAction({
-      footerText: formData.footerText,
-    });
-
+    const result = await updateFooterAction({ footerText: formData.footerText });
     if (result.type === 'settings/updateFooter/fulfilled') {
       toast.success('Footer updated successfully');
     } else if (result.type === 'settings/updateFooter/rejected') {
       toast.error(result.payload || 'Failed to update footer');
+    }
+  };
+
+  const handleUpdateHeaderCta = async () => {
+    if (!formData.headerCtaText || !formData.headerCtaLink) {
+      toast.error('Please provide both CTA text and link');
+      return;
+    }
+    const result = await updateHeaderCtaAction({
+      text: formData.headerCtaText,
+      link: formData.headerCtaLink,
+    });
+    if (result.type === 'settings/updateHeaderCta/fulfilled') {
+      toast.success('Header CTA updated successfully');
+    } else if (result.type === 'settings/updateHeaderCta/rejected') {
+      toast.error(result.payload || 'Failed to update header CTA');
     }
   };
 
@@ -144,13 +150,10 @@ const SiteSettingsPage = () => {
       toast.error('Please provide both link and icon');
       return;
     }
-
     const formDataObj = new FormData();
     formDataObj.append('link', newSocialMedia.link);
     formDataObj.append('icon', newSocialMedia.icon);
-
     const result = await addSocialMediaAction(formDataObj);
-
     if (result.type === 'settings/addSocialMedia/fulfilled') {
       toast.success('Social media link added successfully');
       setNewSocialMedia({ link: '', icon: null });
@@ -159,9 +162,35 @@ const SiteSettingsPage = () => {
     }
   };
 
+  const handleStartEdit = (link) => {
+    setEditingSocialMedia({ id: link._id, link: link.link, icon: null });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSocialMedia(null);
+  };
+
+  const handleUpdateSocialMedia = async () => {
+    if (!editingSocialMedia.link) {
+      toast.error('Please provide a link');
+      return;
+    }
+    const formDataObj = new FormData();
+    formDataObj.append('link', editingSocialMedia.link);
+    if (editingSocialMedia.icon) {
+      formDataObj.append('icon', editingSocialMedia.icon);
+    }
+    const result = await updateSocialMediaAction(editingSocialMedia.id, formDataObj);
+    if (result.type === 'settings/updateSocialMedia/fulfilled') {
+      toast.success('Social media link updated successfully');
+      setEditingSocialMedia(null);
+    } else if (result.type === 'settings/updateSocialMedia/rejected') {
+      toast.error(result.payload || 'Failed to update social media link');
+    }
+  };
+
   const handleDeleteSocialMedia = async (id) => {
     const result = await deleteSocialMediaAction(id);
-
     if (result.type === 'settings/deleteSocialMedia/fulfilled') {
       toast.success('Social media link deleted successfully');
     } else if (result.type === 'settings/deleteSocialMedia/rejected') {
@@ -184,8 +213,7 @@ const SiteSettingsPage = () => {
           Site Settings
         </h1>
         <p className="mt-1 text-gray-500">
-          Manage your organization&apos;s brand, contact info, and social
-          presence.
+          Manage your organization&apos;s brand, contact info, and social presence.
         </p>
       </div>
 
@@ -216,11 +244,7 @@ const SiteSettingsPage = () => {
                   className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
                 />
               </div>
-              <Button
-                onClick={handleUpdateLogo}
-                disabled={!logo || isLoading}
-                className="w-full"
-              >
+              <Button onClick={handleUpdateLogo} disabled={!logo || isLoading} className="w-full">
                 {isLoading ? 'Updating...' : 'Update Logo'}
               </Button>
             </div>
@@ -232,10 +256,8 @@ const SiteSettingsPage = () => {
             </div>
             <div className="grid grid-cols-1 gap-6 p-8 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Email
-                </label>
-                <div className="group relative">
+                <label className="mb-2 block text-sm font-semibold text-gray-700">Email</label>
+                <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <EnvelopeIcon className="h-5 w-5 text-gray-400" />
                   </div>
@@ -250,10 +272,8 @@ const SiteSettingsPage = () => {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Phone
-                </label>
-                <div className="group relative">
+                <label className="mb-2 block text-sm font-semibold text-gray-700">Phone</label>
+                <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <DevicePhoneMobileIcon className="h-5 w-5 text-gray-400" />
                   </div>
@@ -268,10 +288,8 @@ const SiteSettingsPage = () => {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Address
-                </label>
-                <div className="group relative">
+                <label className="mb-2 block text-sm font-semibold text-gray-700">Address</label>
+                <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <MapPinIcon className="h-5 w-5 text-gray-400" />
                   </div>
@@ -285,11 +303,7 @@ const SiteSettingsPage = () => {
                 </div>
               </div>
 
-              <Button
-                onClick={handleUpdateContact}
-                disabled={isLoading}
-                className="w-full md:col-span-2"
-              >
+              <Button onClick={handleUpdateContact} disabled={isLoading} className="w-full md:col-span-2">
                 {isLoading ? 'Updating...' : 'Update Contact'}
               </Button>
             </div>
@@ -301,9 +315,7 @@ const SiteSettingsPage = () => {
             </div>
             <div className="space-y-6 p-8">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Description
-                </label>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">Description</label>
                 <textarea
                   name="footerText"
                   rows={4}
@@ -312,12 +324,46 @@ const SiteSettingsPage = () => {
                   className="block w-full rounded-xl border border-gray-200 p-4 text-gray-900 transition-all focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 />
               </div>
-              <Button
-                onClick={handleUpdateFooter}
-                disabled={isLoading}
-                className="w-full"
-              >
+              <Button onClick={handleUpdateFooter} disabled={isLoading} className="w-full">
                 {isLoading ? 'Updating...' : 'Update Footer'}
+              </Button>
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
+              <h2 className="flex items-center gap-2 font-bold text-gray-800">
+                <LinkIcon className="h-5 w-5 text-blue-500" />
+                Header CTA Button
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 gap-6 p-8 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">Button Text</label>
+                <input
+                  type="text"
+                  name="headerCtaText"
+                  value={formData.headerCtaText}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Request a Quote"
+                  className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 transition-all focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">Button Link</label>
+                <input
+                  type="text"
+                  name="headerCtaLink"
+                  value={formData.headerCtaLink}
+                  onChange={handleInputChange}
+                  placeholder="e.g. /quote"
+                  className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 transition-all focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                />
+              </div>
+
+              <Button onClick={handleUpdateHeaderCta} disabled={isLoading} className="w-full md:col-span-2">
+                {isLoading ? 'Updating...' : 'Update Header CTA'}
               </Button>
             </div>
           </section>
@@ -334,27 +380,20 @@ const SiteSettingsPage = () => {
             <div className="space-y-6 p-6">
               <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/30 p-4">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Link
-                  </label>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">Link</label>
                   <input
                     type="url"
                     placeholder="https://example.com"
                     value={newSocialMedia.link}
                     onChange={(e) =>
-                      setNewSocialMedia((prev) => ({
-                        ...prev,
-                        link: e.target.value,
-                      }))
+                      setNewSocialMedia((prev) => ({ ...prev, link: e.target.value }))
                     }
                     className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Icon
-                  </label>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">Icon</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -363,12 +402,7 @@ const SiteSettingsPage = () => {
                   />
                 </div>
 
-                <Button
-                  onClick={handleAddSocialMedia}
-                  disabled={isLoading}
-                  className="w-full"
-                  size="sm"
-                >
+                <Button onClick={handleAddSocialMedia} disabled={isLoading} className="w-full" size="sm">
                   <PlusIcon className="mr-1 h-4 w-4" />
                   Add Link
                 </Button>
@@ -376,39 +410,86 @@ const SiteSettingsPage = () => {
 
               <div className="space-y-3">
                 {socialLinks.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-gray-400">
-                    No social links yet
-                  </div>
+                  <div className="py-6 text-center text-sm text-gray-400">No social links yet</div>
                 ) : (
                   socialLinks.map((link) => (
                     <div
                       key={link._id}
-                      className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3"
+                      className="rounded-lg border border-gray-200 bg-gray-50 p-3"
                     >
-                      <div className="flex min-w-0 flex-1 items-center gap-3">
-                        {link.icon && (
-                          <img
-                            src={link.icon}
-                            alt="icon"
-                            className="h-8 w-8 flex-shrink-0 rounded object-contain"
+                      {editingSocialMedia?.id === link._id ? (
+                        <div className="space-y-2">
+                          <input
+                            type="url"
+                            value={editingSocialMedia.link}
+                            onChange={(e) =>
+                              setEditingSocialMedia((prev) => ({ ...prev, link: e.target.value }))
+                            }
+                            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
                           />
-                        )}
-                        <a
-                          href={link.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="truncate text-sm text-blue-600 hover:underline"
-                        >
-                          {link.link}
-                        </a>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteSocialMedia(link._id)}
-                        disabled={isLoading}
-                        className="ml-2 rounded p-1 text-red-500 transition-colors hover:bg-red-50"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file)
+                                setEditingSocialMedia((prev) => ({ ...prev, icon: file }));
+                            }}
+                            className="block w-full text-sm text-gray-500 file:mr-2 file:rounded file:border-0 file:bg-blue-50 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-blue-700"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={handleUpdateSocialMedia}
+                              disabled={isLoading}
+                              size="sm"
+                              className="flex-1"
+                            >
+                              {isLoading ? 'Saving...' : 'Save'}
+                            </Button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="flex min-w-0 flex-1 items-center gap-3">
+                            {link.icon && (
+                              <img
+                                src={link.icon}
+                                alt="icon"
+                                className="h-8 w-8 flex-shrink-0 rounded object-contain"
+                              />
+                            )}
+                            <a
+                              href={link.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="truncate text-sm text-blue-600 hover:underline"
+                            >
+                              {link.link}
+                            </a>
+                          </div>
+                          <div className="ml-2 flex gap-1">
+                            <button
+                              onClick={() => handleStartEdit(link)}
+                              className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-200"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSocialMedia(link._id)}
+                              disabled={isLoading}
+                              className="rounded p-1 text-red-500 transition-colors hover:bg-red-50"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}

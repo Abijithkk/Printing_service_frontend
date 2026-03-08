@@ -19,6 +19,9 @@ const Navbar = () => {
   const homeData = useSelector((state) => state.home?.data);
   const header = homeData?.header;
   const settings = homeData?.settings;
+  const ctaButton = header?.ctaButton;
+  const headerCTA = settings?.headerCTA;
+  console.log(headerCTA);
 
   const navLinks = useMemo(() => {
     if (Array.isArray(header?.navigation) && header.navigation.length) {
@@ -32,8 +35,6 @@ const Navbar = () => {
     }
     return fallbackNavLinks;
   }, [header?.navigation]);
-
-  const ctaButton = header?.ctaButton;
 
   const navLinkVariants = {
     hidden: { opacity: 0, y: -10 },
@@ -175,12 +176,14 @@ const Navbar = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Link
-              to={ctaButton?.link || '/request-quote'}
-              className="hidden whitespace-nowrap rounded-full bg-[#8ED800] px-6 py-2 text-[11px] font-bold uppercase tracking-widest text-black transition-all duration-300 hover:bg-white sm:inline-block"
-            >
-              {ctaButton?.text || 'Request A Quote'}
-            </Link>
+            {headerCTA?.text && (
+              <Link
+                to={headerCTA.link || '/request-quote'}
+                className="hidden whitespace-nowrap rounded-full bg-[#8ED800] px-6 py-2 text-[11px] font-bold uppercase tracking-widest text-black transition-all duration-300 hover:bg-white sm:inline-block"
+              >
+                {headerCTA.text}
+              </Link>
+            )}
           </motion.div>
 
           <motion.button
@@ -255,13 +258,15 @@ const Navbar = () => {
                   <Phone size={20} strokeWidth={1.5} />
                 </motion.div>
               </div>
-              <Link
-                to={ctaButton?.link || '/request-quote'}
-                className="rounded-full border border-[#c8f135] px-5 py-2 text-xs font-semibold uppercase tracking-widest text-[#c8f135] transition-all duration-300 hover:bg-[#c8f135] hover:text-black"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {ctaButton?.text || 'Request A Quote'}
-              </Link>
+              {headerCTA?.text && (
+                <Link
+                  to={headerCTA.link || '/request-quote'}
+                  className="rounded-full border border-[#c8f135] px-5 py-2 text-xs font-semibold uppercase tracking-widest text-[#c8f135] transition-all duration-300 hover:bg-[#c8f135] hover:text-black"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {headerCTA.text}
+                </Link>
+              )}
             </motion.div>
           </motion.div>
         )}

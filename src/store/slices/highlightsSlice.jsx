@@ -8,11 +8,19 @@ const initialState = {
   error: null,
 };
 
+const normalize = (item) => ({
+  ...item,
+  id: item._id || item.id,
+  icon: item.icon || '',
+});
+
 export const getHighlights = createAsyncThunk(
   'highlights/getHighlights',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.HIGHLIGHTS.GET_ALL);
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.HIGHLIGHTS.GET_ALL,
+      );
       if (response.data.success) {
         return response.data.data || [];
       }
@@ -176,7 +184,9 @@ const highlightsSlice = createSlice({
       })
       .addCase(getHighlights.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.data = action.payload;
+        state.data = Array.isArray(action.payload)
+          ? action.payload.map(normalize)
+          : [];
         state.error = null;
       })
       .addCase(getHighlights.rejected, (state, action) => {
@@ -190,12 +200,13 @@ const highlightsSlice = createSlice({
       .addCase(createHighlight.fulfilled, (state, action) => {
         state.isLoading = false;
         if (Array.isArray(action.payload)) {
-          state.data = action.payload;
+          state.data = action.payload.map(normalize);
         } else if (action.payload && action.payload._id) {
+          const normalized = normalize(action.payload);
           if (Array.isArray(state.data)) {
-            state.data = [...state.data, action.payload];
+            state.data = [...state.data, normalized];
           } else {
-            state.data = [action.payload];
+            state.data = [normalized];
           }
         }
         state.error = null;
@@ -211,10 +222,15 @@ const highlightsSlice = createSlice({
       .addCase(updateHighlight.fulfilled, (state, action) => {
         state.isLoading = false;
         if (Array.isArray(action.payload)) {
-          state.data = action.payload;
-        } else if (action.payload && action.payload._id && Array.isArray(state.data)) {
+          state.data = action.payload.map(normalize);
+        } else if (
+          action.payload &&
+          action.payload._id &&
+          Array.isArray(state.data)
+        ) {
+          const normalized = normalize(action.payload);
           state.data = state.data.map((item) =>
-            item._id === action.payload._id ? action.payload : item,
+            item._id === normalized._id ? normalized : item,
           );
         }
         state.error = null;
@@ -245,7 +261,7 @@ const highlightsSlice = createSlice({
       .addCase(reorderHighlights.fulfilled, (state, action) => {
         state.isLoading = false;
         if (Array.isArray(action.payload)) {
-          state.data = action.payload;
+          state.data = action.payload.map(normalize);
         }
         state.error = null;
       })
@@ -260,10 +276,15 @@ const highlightsSlice = createSlice({
       .addCase(toggleHighlightStatus.fulfilled, (state, action) => {
         state.isLoading = false;
         if (Array.isArray(action.payload)) {
-          state.data = action.payload;
-        } else if (action.payload && action.payload._id && Array.isArray(state.data)) {
+          state.data = action.payload.map(normalize);
+        } else if (
+          action.payload &&
+          action.payload._id &&
+          Array.isArray(state.data)
+        ) {
+          const normalized = normalize(action.payload);
           state.data = state.data.map((item) =>
-            item._id === action.payload._id ? action.payload : item,
+            item._id === normalized._id ? normalized : item,
           );
         }
         state.error = null;

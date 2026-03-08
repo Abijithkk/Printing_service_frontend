@@ -30,9 +30,9 @@ const HeroSection = ({ hero, highlights, cta }) => {
 
   const resolvedHighlights = useMemo(() => {
     if (Array.isArray(highlights) && highlights.length) {
-      const icons = [Headphones, Star, ShoppingCart, Clock];
+      const defaultIcons = [Headphones, Star, ShoppingCart, Clock];
       return highlights.map((item, index) => ({
-        icon: icons[index % icons.length],
+        icon: item.icon || defaultIcons[index % defaultIcons.length],
         title: item.title || '',
       }));
     }

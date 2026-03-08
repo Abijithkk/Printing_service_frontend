@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import {
-  BellIcon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
@@ -25,14 +24,7 @@ const AdminHeader = () => {
       </div>
 
       <div className="flex items-center space-x-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="relative text-gray-500 hover:text-blue-600"
-        >
-          <BellIcon className="h-6 w-6" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full border border-white bg-red-500"></span>
-        </Button>
+        
 
         <div className="flex items-center space-x-3 border-l border-gray-200 pl-6">
           <div className="flex flex-col items-end">

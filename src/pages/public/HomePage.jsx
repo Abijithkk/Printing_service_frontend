@@ -50,18 +50,20 @@ const HomePage = () => {
     ? data.testimonials
     : [];
   const categories = Array.isArray(data?.categories) ? data.categories : [];
-  const quickActions = Array.isArray(data?.quickActions)
-    ? data.quickActions
-    : [];
+  const ctaButtons = Array.isArray(data?.ctaButtons) ? data.ctaButtons : [];
   const settings = data?.settings || null;
 
   return (
     <div className="min-h-screen bg-black">
-      <HeroSection hero={hero} highlights={highlights} cta={data?.header?.ctaButton || null} />
+      <HeroSection
+        hero={hero}
+        highlights={highlights}
+        cta={data?.header?.ctaButton || null}
+      />
       <FeaturedProducts categories={categories} />
       <SolutionsSection services={services} />
       <TestimonialsSection testimonials={testimonials} />
-      <CtaSection quickActions={quickActions} settings={settings} />
+      <CtaSection ctaButtons={ctaButtons} settings={settings} />
       <NewsletterSection />
     </div>
   );

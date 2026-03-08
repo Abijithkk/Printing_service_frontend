@@ -1,20 +1,22 @@
 import { FileText, MapPin, Upload, Phone } from 'lucide-react';
 import graphicDesign from '../../../assets/images/graphic-design.png';
 
-const CtaSection = ({ quickActions, settings }) => {
+const CtaSection = ({ ctaButtons, settings }) => {
   const fallbackActions = [
-    { icon: <FileText size={24} />, label: 'Request a Quote' },
-    { icon: <MapPin size={24} />, label: 'Visit Our Shops' },
-    { icon: <Upload size={24} />, label: 'Upload Your Files' },
-    { icon: <Phone size={24} />, label: 'Call Us' },
+    { icon: <FileText size={24} />, label: 'Request a Quote', link: '#' },
+    { icon: <MapPin size={24} />, label: 'Visit Our Shops', link: '#' },
+    { icon: <Upload size={24} />, label: 'Upload Your Files', link: '#' },
+    { icon: <Phone size={24} />, label: 'Call Us', link: '#' },
   ];
 
   const actions =
-    Array.isArray(quickActions) && quickActions.length
-      ? quickActions.map((item) => ({
-          icon: null,
-          label: item.title || item.text || '',
-        }))
+    Array.isArray(ctaButtons) && ctaButtons.length
+      ? ctaButtons
+          .filter((item) => item.isActive)
+          .map((item) => ({
+            label: item.text || item.title || '',
+            link: item.link || '#',
+          }))
       : fallbackActions;
 
   return (
@@ -24,15 +26,14 @@ const CtaSection = ({ quickActions, settings }) => {
           {/* Left Column */}
           <div className="flex flex-col gap-3 md:w-2/5">
             {actions.map((action, index) => (
-              <button
+              <a
                 key={index}
+                href={action.link}
                 className="flex flex-1 items-center gap-4 bg-[#111111] px-8 py-6 text-white transition-all hover:bg-black"
               >
-                <div className="text-white">
-                  {action.icon}
-                </div>
+                <div className="text-white">{action.icon}</div>
                 <span className="text-[18px] font-medium">{action.label}</span>
-              </button>
+              </a>
             ))}
           </div>
 

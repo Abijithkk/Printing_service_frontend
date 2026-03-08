@@ -2,6 +2,7 @@ import businessCards from '../../../assets/images/business-cards.png';
 import brochures from '../../../assets/images/brochures.png';
 import tearDropFlag from '../../../assets/images/tear-drop-flag.png';
 import signs from '../../../assets/images/signs.png';
+import CategoryCard from '../Categories/CategoryCard';
 
 const FeaturedProducts = ({ categories }) => {
   const fallbackProducts = [
@@ -27,12 +28,14 @@ const FeaturedProducts = ({ categories }) => {
     { title: 'TEAR DROP FLAG', image: tearDropFlag },
   ];
 
-  const products = Array.isArray(categories) && categories.length
-    ? categories.map((item) => ({
-        title: item.title || '',
-        image: item.image || '',
-      }))
-    : fallbackProducts;
+  const products =
+    Array.isArray(categories) && categories.length
+      ? categories.map((item) => ({
+          id: item._id || item.id || null,
+          title: item.title || '',
+          image: item.image || '',
+        }))
+      : fallbackProducts; // fallback items already contain title + image, id will be undefined
 
   return (
     <section className="bg-white px-4 py-10 md:py-16">
@@ -56,18 +59,12 @@ const FeaturedProducts = ({ categories }) => {
 
         <div className="grid grid-cols-2 gap-x-6 gap-y-14 md:grid-cols-3 lg:grid-cols-5">
           {products.map((product, index) => (
-            <div key={index} className="group cursor-pointer">
-              <div className="mb-5 aspect-[11/12] overflow-hidden bg-[#F5F5F5] transition-all duration-500 group-hover:shadow-xl">
-                <img
-                  src={product.image}
-                  alt={product.title}
-                  className="h-full w-full object-cover grayscale transition-all duration-700 ease-in-out group-hover:scale-105 group-hover:grayscale-0"
-                />
-              </div>
-              <h4 className="font-inter text-xs font-bold uppercase leading-snug tracking-widest text-black md:text-sm">
-                {product.title}
-              </h4>
-            </div>
+            <CategoryCard
+              key={index}
+              id={product.id}
+              title={product.title}
+              image={product.image}
+            />
           ))}
         </div>
       </div>

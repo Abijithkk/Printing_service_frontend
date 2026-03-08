@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
 import Table from '../../components/common/Table';
 import Modal from '../../components/common/Modal';
 import Toggle from '../../components/common/Toggle';
@@ -8,28 +7,23 @@ import Button from '../../components/common/Button';
 import NavigationForm from '../../components/admin/forms/NavigationForm';
 import Loader from '../../components/common/Loader';
 import { PlusIcon } from '@heroicons/react/24/outline';
-import axiosInstance from '../../config/axiosInstance';
-import API_ENDPOINTS from '../../constants/apiEndpoints';
 import { useToast } from '../../hooks/useToast';
-import {
-  setNavigationItems,
-  addNavigationItem,
-  updateNavigationItem,
-  deleteNavigationItem,
-  reorderNavigationItems,
-  setLoading,
-  setError,
-  clearError,
-} from '../../store/slices/navigationSlice';
+import useNavigation from '../../hooks/useNavigation';
 
 const NavigationPage = () => {
-  const dispatch = useDispatch();
-  const {
-    items: navItems,
-    loading,
-    error,
-  } = useSelector((state) => state.navigation);
   const { success, error: showError } = useToast();
+  const {
+    data: navItems,
+    isLoading: loading,
+    error,
+    fetchNavigation,
+    createNavigationAction,
+    updateNavigationAction,
+    deleteNavigationAction,
+    reorderNavigationAction,
+    toggleNavigationStatusAction,
+    removeError,
+  } = useNavigation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -42,33 +36,19 @@ const NavigationPage = () => {
     id: item._id || item.id,
   });
 
-  const fetchNavItems = useCallback(async () => {
-    try {
-      dispatch(setLoading(true));
-      const response = await axiosInstance.get(
-        API_ENDPOINTS.NAVIGATION.GET_ALL,
-      );
-      const items = Array.isArray(response.data?.data)
-        ? response.data.data.map(normalizeItem)
-        : [];
-      dispatch(setNavigationItems(items));
-      dispatch(clearError());
-    } catch (err) {
-      const message =
-        err.response?.data?.message || 'Failed to fetch navigation items';
-      dispatch(setError(message));
-      showError(message);
-    } finally {
-      dispatch(setLoading(false));
-    }
-  }, [dispatch, showError]);
+  useEffect(() => {
+    fetchNavigation();
+  }, [fetchNavigation]);
 
   useEffect(() => {
-    fetchNavItems();
-  }, [fetchNavItems]);
+    if (error) {
+      showError(error);
+      removeError();
+    }
+  }, [error, showError, removeError]);
 
   const handleOpenModal = (item = null) => {
-    dispatch(clearError());
+    removeError();
     if (item) {
       setEditingItem(item);
     } else {
@@ -83,33 +63,31 @@ const NavigationPage = () => {
   };
 
   const handleSubmit = async (formData) => {
+    setIsSubmitting(true);
+
     try {
-      setIsSubmitting(true);
-
       if (editingItem) {
-        const url = API_ENDPOINTS.NAVIGATION.UPDATE.replace(
-          ':id',
-          editingItem.id,
-        );
-        const response = await axiosInstance.put(url, formData);
-        const item = normalizeItem(response.data?.data || response.data);
-        dispatch(updateNavigationItem({ ...item }));
-        success('Navigation item updated successfully');
-      } else {
-        const response = await axiosInstance.post(
-          API_ENDPOINTS.NAVIGATION.CREATE,
+        const result = await updateNavigationAction({
+          id: editingItem.id,
           formData,
-        );
-        const item = normalizeItem(response.data?.data || response.data);
-        dispatch(addNavigationItem(item));
-        success('Navigation item created successfully');
+        });
+        if (result.error) {
+          showError(result.payload || 'Failed to update navigation item');
+        } else {
+          success('Navigation item updated successfully');
+          handleCloseModal();
+        }
+      } else {
+        const result = await createNavigationAction(formData);
+        if (result.error) {
+          showError(result.payload || 'Failed to create navigation item');
+        } else {
+          success('Navigation item created successfully');
+          handleCloseModal();
+        }
       }
-
-      handleCloseModal();
     } catch (err) {
-      const message =
-        err.response?.data?.message || 'Failed to save navigation item';
-      showError(message);
+      showError('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
     }
@@ -121,65 +99,37 @@ const NavigationPage = () => {
   };
 
   const confirmDelete = async () => {
-    try {
-      const url = API_ENDPOINTS.NAVIGATION.DELETE.replace(
-        ':id',
-        itemToDelete.id,
-      );
-      await axiosInstance.delete(url);
-      dispatch(deleteNavigationItem(itemToDelete.id));
+    if (!itemToDelete) return;
+    const result = await deleteNavigationAction(itemToDelete.id);
+    if (result.error) {
+      showError(result.payload || 'Failed to delete navigation item');
+    } else {
       success('Navigation item deleted successfully');
       setIsConfirmOpen(false);
       setItemToDelete(null);
-    } catch (err) {
-      const message =
-        err.response?.data?.message || 'Failed to delete navigation item';
-      showError(message);
     }
   };
 
   const toggleActive = async (item) => {
-    try {
-      const url = API_ENDPOINTS.NAVIGATION.TOGGLE_ACTIVE.replace(
-        ':id',
-        item.id,
-      );
-      const response = await axiosInstance.patch(url);
-      const updatedItem = normalizeItem(response.data?.data || response.data);
-      dispatch(updateNavigationItem(updatedItem));
+    const result = await toggleNavigationStatusAction(item.id);
+    if (result.error) {
+      showError(result.payload || 'Failed to toggle navigation item status');
+      fetchNavigation();
+    } else {
+      const updatedItem = normalizeItem(result.payload);
       success(
         `Navigation item ${updatedItem.isActive ? 'activated' : 'deactivated'} successfully`,
       );
-    } catch (err) {
-      const message =
-        err.response?.data?.message ||
-        'Failed to toggle navigation item status';
-      showError(message);
-      fetchNavItems();
     }
   };
 
   const handleReorder = async (newItems) => {
-    try {
-      const reorderData = newItems.map((item, index) => ({
-        id: item._id || item.id,
-        order: index + 1,
-      }));
-
-      await axiosInstance.put(API_ENDPOINTS.NAVIGATION.REORDER, reorderData);
-      const updatedItems = newItems
-        .map((item, index) => ({
-          ...item,
-          order: index + 1,
-        }))
-        .sort((a, b) => a.order - b.order);
-      dispatch(reorderNavigationItems(updatedItems));
+    const result = await reorderNavigationAction(newItems);
+    if (result.error) {
+      showError(result.payload || 'Failed to reorder navigation items');
+      fetchNavigation();
+    } else {
       success('Navigation items reordered successfully');
-    } catch (err) {
-      const message =
-        err.response?.data?.message || 'Failed to reorder navigation items';
-      showError(message);
-      fetchNavItems();
     }
   };
 
